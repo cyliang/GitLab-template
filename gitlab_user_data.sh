@@ -1,5 +1,28 @@
 #! /bin/bash
 
+function get-registration-token {
+	# Directly add code into GitLab to write the registration token into some file.
+	# A FIFO (named pipe) is used here to make this shell script blocked for waiting
+	# the starting process of GitLab to finish.
+	# The FIFO is write-only for security concern, and is deleted after receiving the token.
+	SED_CMD='5a \
+  open("/opt/gitlab/REGISTRATION_TOKEN", "w") { |f| \
+    f.puts REGISTRATION_TOKEN \
+  } \
+	'
+	sed -e "$SED_CMD" -i~ /opt/gitlab/embedded/service/gitlab-rails/config/initializers/4_ci_app.rb
+
+	mkfifo /opt/gitlab/REGISTRATION_TOKEN
+	chmod 222 /opt/gitlab/REGISTRATION_TOKEN
+
+	gitlab-ctl restart
+
+	cat /opt/gitlab/REGISTRATION_TOKEN > /dev/null
+	cat /opt/gitlab/REGISTRATION_TOKEN
+	mv -f /opt/gitlab/embedded/service/gitlab-rails/config/initializers/4_ci_app.rb~ /opt/gitlab/embedded/service/gitlab-rails/config/initializers/4_ci_app.rb
+	rm -f /opt/gitlab/REGISTRATION_TOKEN
+}
+
 function install-gitlab {
 	# Update repositary
 	apt-get update
@@ -12,6 +35,7 @@ function install-gitlab {
 	# Execute installation script & install
 	curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
 	apt-get install -y gitlab-ce
+
 	gitlab-ctl reconfigure
 }
 
@@ -25,4 +49,5 @@ EOF
 }
 
 install-gitlab
+get-registration-token
 set-gitlab-password 'gitlab.nctucs.net'
