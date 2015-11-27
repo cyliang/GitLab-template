@@ -5,6 +5,7 @@ function get-registration-token {
 	# A FIFO (named pipe) is used here to make this shell script blocked for waiting
 	# the starting process of GitLab to finish.
 	# The FIFO is write-only for security concern, and is deleted after receiving the token.
+
 	SED_CMD='5a \
   open("/opt/gitlab/REGISTRATION_TOKEN", "w") { |f| \
     f.puts REGISTRATION_TOKEN \
@@ -40,10 +41,14 @@ function install-gitlab {
 }
 
 function set-gitlab-password {
+	# Change the password of root and cancel the expiration of the password to
+	# make the GitLab instance available immediately.
+
 	gitlab-rails console production <<EOF
 	user = User.where(id: 1).first
 	user.password = '$1'
 	user.password_confirmation = '$1'
+	user.password_expires_at = nil
 	user.save!
 EOF
 }
