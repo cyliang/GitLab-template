@@ -1,0 +1,128 @@
+heat_template_version: 2014-10-16
+
+description: My first stack
+
+parameters:
+  key_name:
+    type: string
+    description: Name of keypair to assign to servers
+    default: gitlab_key
+  image:
+    type: string
+    description: Name of image to use for servers
+    default: Ubuntu14.04
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: 1core2GBmemory20GBdisk
+  public_net:
+    type: string
+    description: >
+      ID or name of public network for which floating IP addresses will be allocated
+    default: net04_ext
+  private_net_name:
+    type: string
+    description: Name of private network to be created
+    default: gitlab_subnet
+  private_net_cidr:
+    type: string
+    description: Private network address (CIDR notation)
+    default: 192.168.0.0/24
+  private_net_dns_nameservers:
+    type: comma_delimited_list
+    description: Private network dns server
+    default: [ "140.113.1.1", "8.8.8.8"]
+#  private_net_gateway:
+#    type: string
+#    description: Private network gateway address
+
+resources:
+  #private_net:
+  #  type: OS::Neutron::Net
+  #  properties:
+  #    name: { get_param: private_net_num }
+
+  #private_subnet:
+  #  type: OS::Neutron::Subnet
+  #  properties:
+  #    network_id: { get_resource: private_net }
+  #    cidr: { get_param: private_net_cidr}
+  #    dns_nameservers: { get_param: private_net_dns_nameservers}
+  #    ip_version: 4
+  
+  #router:
+  #  type: OS::Neutron::Router
+  #  properties:
+  #    external_gateway_info: { get_param: public_net }
+
+  #router_interface:
+  #  type: OS::Neutron::RouterInterface
+  #  properties:
+  #    router_id: { get_resource: router }
+  #    subnet_id: { get_resource: private_subnet }
+
+  my_key:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: gitlab_key
+
+  server1:
+    type: OS::Nova::Server
+    properties:
+      name: Server1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_resource: my_key }
+      admin_user: ubuntu
+      networks:
+        - port: { get_resource: server1_port }
+      user_data:
+        get_file: gitlab_user_data.sh
+      user_data_format: RAW
+
+  server1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: 59b143a7-7d97-4e56-a213-42359395892e #{ get_resource: private_net }
+      fixed_ips:
+        - subnet_id: bbffe3bc-6847-44cd-a9da-8702e570fa50 #{ get_resource: private_subnet }
+
+  server1_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: public_net }
+    #  floating_ip_address: 140.113.240.9
+      port_id: { get_resource: server1_port }
+
+  server2:
+    type: OS::Nova::Server
+    properties:
+      name: Server1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: {get_resource: my_key }
+      networks:
+        - port: { get_resource: server2_port }
+
+  server2_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: 59b143a7-7d97-4e56-a213-42359395892e #{ get_resource: private_net }
+      fixed_ips:
+        - subnet_id: bbffe3bc-6847-44cd-a9da-8702e570fa50 #{ get_resource: private_subnet }
+
+outputs:
+  server1_private_ip:
+    description: IP address of server1 in private network
+    value: { get_attr: [ server1, first_address ] }
+  server1_public_ip:
+    description: Floating IP address of server1 in public network
+    value: { get_attr: [ server1_floating_ip, floating_ip_address ] }
+  server2_private_ip:
+    description: IP address of server2 in private network
+    value: { get_attr: [ server2, first_address ] }
+  private_key:
+    description: Private key
+    value: { get_attr: [ my_key, private_key ] }
+
