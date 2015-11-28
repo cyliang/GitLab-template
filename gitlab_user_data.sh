@@ -36,6 +36,11 @@ function install-gitlab {
 	# Execute installation script & install
 	curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
 	apt-get install -y gitlab-ce
+}
+
+function config-gitlab {
+	curl -o /etc/gitlab/gitlab.rb https://raw.githubusercontent.com/cyliang/GitLab-template/master/gitlab.rb
+	sed -e "6s#GITLAB_EXTERNAL_URL#$1#g" -i /etc/gitlab/gitlab.rb
 
 	gitlab-ctl reconfigure
 }
@@ -54,5 +59,6 @@ EOF
 }
 
 install-gitlab
+config-gitlab 'http://140.113.240.21/'
 get-registration-token
 set-gitlab-password 'gitlab.nctucs.net'
