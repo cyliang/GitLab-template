@@ -56,7 +56,7 @@ resources:
   server1:
     type: OS::Nova::Server
     properties:
-      name: Server1
+      name: GitLab_Server
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: { get_resource: my_key }
@@ -89,7 +89,7 @@ resources:
   server2:
     type: OS::Nova::Server
     properties:
-      name: Server1
+      name: Runner_Server
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: {get_resource: my_key }
