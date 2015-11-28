@@ -113,6 +113,13 @@ resources:
       key_name: {get_resource: my_key }
       networks:
         - port: { get_resource: server2_port }
+      user_data:
+        str_replace:
+          template:
+            get_file: runner_user_data.sh
+          params:
+            $GITLAB_IP: { get_attr: [ server1_floating_ip, floating_ip_address ] }
+      user_data_format: RAW
 
   server2_port:
     type: OS::Neutron::Port
