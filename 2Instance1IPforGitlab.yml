@@ -3,6 +3,10 @@ heat_template_version: 2014-10-16
 description: My first stack
 
 parameters:
+  gitlab_root_password:
+    type: string
+    description: The administrator password used to login GitLab.
+    default: gitlab.nctucs.net
   key_name:
     type: string
     description: Name of keypair to assign to servers
@@ -78,7 +82,12 @@ resources:
       networks:
         - port: { get_resource: server1_port }
       user_data:
-        get_file: gitlab_user_data.sh
+        str_replace:
+          template:
+            get_file: gitlab_user_data.sh
+          params:
+            $INSTANCE_FLOATING_IP: { get_attr: [ server1_floating_ip, floating_ip_address ] }
+            $GITLAB_ROOT_PASSWORD: { get_param: gitlab_root_password }
       user_data_format: RAW
 
   server1_port:

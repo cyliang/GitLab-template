@@ -59,6 +59,6 @@ EOF
 }
 
 install-gitlab
-config-gitlab 'http://140.113.240.21/'
+config-gitlab "http://$INSTANCE_FLOATING_IP/"
 get-registration-token
-set-gitlab-password 'gitlab.nctucs.net'
+set-gitlab-password '$GITLAB_ROOT_PASSWORD'
