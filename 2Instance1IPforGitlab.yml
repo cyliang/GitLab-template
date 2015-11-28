@@ -65,6 +65,15 @@ resources:
   #    router_id: { get_resource: router }
   #    subnet_id: { get_resource: private_subnet }
 
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_handle }
+      timeout: 43200
+
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+
   my_key:
     type: OS::Nova::KeyPair
     properties:
@@ -88,6 +97,7 @@ resources:
           params:
             $INSTANCE_FLOATING_IP: { get_attr: [ server1_floating_ip, floating_ip_address ] }
             $GITLAB_ROOT_PASSWORD: { get_param: gitlab_root_password }
+            wc_notify: { get_attr: [wait_handle, curl_cli] }
       user_data_format: RAW
 
   server1_port:
@@ -119,6 +129,7 @@ resources:
             get_file: runner_user_data.sh
           params:
             $GITLAB_IP: { get_attr: [ server1_floating_ip, floating_ip_address ] }
+            $REGISTRATION_TOKEN: { 'Fn::Select': ['registration token', { get_attr: [wait_condition, data] }] }
       user_data_format: RAW
 
   server2_port:

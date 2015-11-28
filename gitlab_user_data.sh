@@ -19,7 +19,7 @@ function get-registration-token {
 	gitlab-ctl restart
 
 	cat /opt/gitlab/REGISTRATION_TOKEN > /dev/null
-	cat /opt/gitlab/REGISTRATION_TOKEN
+	REGISTRATION_TOKEN=`cat /opt/gitlab/REGISTRATION_TOKEN`
 	mv -f /opt/gitlab/embedded/service/gitlab-rails/config/initializers/4_ci_app.rb~ /opt/gitlab/embedded/service/gitlab-rails/config/initializers/4_ci_app.rb
 	rm -f /opt/gitlab/REGISTRATION_TOKEN
 }
@@ -62,3 +62,4 @@ install-gitlab
 config-gitlab "http://$INSTANCE_FLOATING_IP/"
 get-registration-token
 set-gitlab-password '$GITLAB_ROOT_PASSWORD'
+wc_notify --data-binary "{\"data\": \"$REGISTRATION_TOKEN\", \"id\": \"registration token\"}"

@@ -11,7 +11,7 @@ function register-runner {
 		--non-interactive \
 		--url "http://$1/ci/" \
 		--registration-token "$2" \
-		--description 'The shared-runner for all users.' \
+		--name 'The shared-runner for all users.' \
 		--executor 'docker' \
 		--docker-image ruby:2.1
 }
